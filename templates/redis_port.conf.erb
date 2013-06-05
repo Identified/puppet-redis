@@ -95,16 +95,19 @@ databases 1
 #   after 300 sec (5 min) if at least 10 keys changed
 #   after 60 sec if at least 10000 keys changed
 #
+#   save 900 1
+#   save 300 10
+#   save 60 10000
+#
 #   Note: you can disable saving at all commenting all the save lines.
 #   It is also possible to remove all the previously configured save
 #   points by adding a save directive with a single empty string argument
 #   like in the following example:
 #
 #   save ""
-
-save 900 1
-save 300 10
-save 60 10000
+<% @rdb_saves.each do |rdb_save| %>
+<%= "save #{rdb_save[0]} #{rdb_save[1]}" %>
+<% end %>
 
 # By default Redis will stop accepting writes if RDB snapshots are enabled
 # (at least one save point) and the latest background save failed.

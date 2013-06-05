@@ -46,6 +46,22 @@
 #   Password used by AUTH command. If false, not used.
 #   Default: false
 #
+# [*port*]
+#   Set the port that redis will listen on
+#   Default: 6379
+#
+#
+# [*rdb_saves*]
+#   An array of size 2 tuples indicating criteria for an rdb snapshot
+#   Index 0 is <seconds>, Index 1 is <changes>
+#   An rdb snapshot is triggered if both conditions pass for at least one
+#   of these pairs
+#   E.g. The default will trigger a snapshot when:
+#   900 seconds has passed with at least 1 change, OR
+#   300 seconds has passed with at least 10 changes, OR
+#   60 seconds has passed with at least 10000 changes
+#   Default: [ [900, 1], [300, 10], [60, 10000] ]
+#
 # [*timeout*]
 #   Set the redis config value timeout (seconds).
 #   Default: 300
@@ -93,6 +109,7 @@ define redis::instance (
   $maxmemory_policy        = 'volatile-lru',
   $password                = false,
   $port                    = 6379,
+  $rdb_saves               = [ [900, 1], [300, 10], [60, 10000] ],
   $slave_read_only         = true,
   $slowlog_log_slower_than = 10000,
   $slowlog_max_len         = 128,
