@@ -30,7 +30,8 @@
 #   Default: false
 #
 # [*maxmemory*]
-#   Sets the max memory for redis to utilize.
+#   Sets the max memory for redis to utilize in bytes (or can specify values such as `1g`, `1gb`)
+#   Default: half of system memory
 #
 # [*maxmemory_policy*]
 #   Set what keys to remove when redis reaches capacity
@@ -100,12 +101,12 @@
 # Copyright 2012 Thomas Van Doren, unless otherwise noted.
 #
 define redis::instance (
-  $maxmemory,
   $appendfsync             = 'everysec',
   $appendonly              = false,
   $bind_address            = false,
   $log_level               = 'notice',
   $max_clients             = false,
+  $maxmemory               = to_bytes($::memorytotal) / 2,
   $maxmemory_policy        = 'volatile-lru',
   $password                = false,
   $port                    = 6379,

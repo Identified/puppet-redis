@@ -6,6 +6,7 @@ FEATURES:
 
   - Add parameter to enable AOF persistence, parameterize fsync policy
   - Add parameter to specify when to do RDB snapshots
+  - Default maxmemory to half of system memory
 
 IMPROVEMENTS:
 
