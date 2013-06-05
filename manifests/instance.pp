@@ -128,6 +128,6 @@ define redis::instance (
     name      => "redis_${port}",
     enable    => true,
     require   => [ File["redis_${port}.conf"], File["redis-init-${port}"], File["redis-lib-${port}"] ],
-    subscribe => File["redis_port_${port}.conf"],
+    subscribe => File["redis_${port}.conf"],
   }
 }
