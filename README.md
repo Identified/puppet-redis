@@ -1,47 +1,56 @@
-redis puppet module
-===================
+# redis-puppet
 
-[![Build Status](https://secure.travis-ci.org/thomasvandoren/puppet-redis.png)](http://travis-ci.org/thomasvandoren/puppet-redis)
+A puppet module for installing and managing Redis.
 
-Install and configure redis.
+## Installation
+
+Add this as a git submodule into your puppet modules/cdh4 directory:
+```bash
+git submodule add git://github.com/Identified/puppet-redis.git modules/redis
+git commit -m 'Adding modules/redis as a git submodule.'
+```
 
 Usage
 -----
-Installs redis server and client with reasonable defaults (version 2.4.13 is included in the module).
+Installs redis server and client packages (defaults to version 2.6.13)
 
 ```puppet
 include redis
 ```
 
-Installs redis server and client with version 2.6.5.
+Installs redis server and client packages with version `x.x.x`.
 
 ```puppet
 class { 'redis':
-  version => '2.6.5',
+  version => 'x.x.x',
 }
 ```
 
-Installs version 2.4.17, listens on default port 6379 with default settings.
-Sets up 2nd instance on port 6900, binds to address 10.1.2.3 (instead of all 
-available interfaces), sets max memory to 1 gigabyte, and sets a password from 
-hiera.
+Creates an instance on port 6379, sets maxmemory to 1 gb, and sets a password from hiera.
 
 ```puppet
-class { 'redis':
-  version            => '2.4.17',
-}
-redis::instance { 'redis-6900':
-  redis_port         => '6900',
-  redis_bind_address => '10.1.2.3',
-  redis_password     => hiera('redis_password'),
-  redis_max_memory   => '1gb',
+redis::instance { 'redis-6379':
+  port         => '6900',
+  password     => hiera('redis_password'),
+  maxmemory   => '1gb',
 }
 ```
 
-Authors
--------
-Thomas Van Doren
+## Limitations
 
-License
--------
+This module has only been tested on Ubuntu 12.04LTS
+
+## Authors
+- Identified, Inc.
+- Thomas Van Doren (Commits 17308f1be093cd2fa003b5e53a99c22b61e4e24e and older)
+
+## Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
+
+## License
 BSD
