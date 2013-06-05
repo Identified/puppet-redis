@@ -3,46 +3,68 @@
 # Configure redis instance on an arbitrary port.
 #
 # === Parameters
+# [*appendfsync*]
+#   Sets the fsync policy, either `no`, `everysec`, or `always`
+#   Default: everysec
 #
-# [*redis_port*]
+# [*appendonly*]
+#   Set AOF Persistence
+#   Default: false
+#
+# [*port*]
 #   Accept redis connections on this port.
 #   Default: 6379
 #
-# [*redis_bind_address*]
+# [*bind_address*]
 #   Address to bind to.
 #   Default: false, which binds to all interfaces
 #
-# [*redis_max_clients*]
-#   Set the redis config value maxclients. If no value provided, it is
-#   not included in the configuration for 2.6 and set to 0 (unlimited)
-#   for 2.4.
-#   Default: 0 (2.4)
-#   Default: nil (2.6)
-#
-# [*redis_timeout*]
-#   Set the redis config value timeout (seconds).
-#   Default: 300
-#
-# [*redis_loglevel*]
+# [*loglevel*]
 #   Set the redis config value loglevel. Valid values are debug,
 #   verbose, notice, and warning.
 #   Default: notice
 #
-# [*redis_databases*]
-#   Set the redis config value databases.
-#   Default: 16
+# [*max_clients*]
+#   Set the redis config value maxclients. If false, it is
+#   not included in the configuration
+#   Default: false
 #
-# [*redis_slowlog_log_slower_than*]
+# [*maxmemory*]
+#   Sets the max memory for redis to utilize.
+#
+# [*maxmemory_policy*]
+#   Set what keys to remove when redis reaches capacity
+#   'volatile-lru' removes the key with an expire set using an LRU algorithm
+#   'allkeys-lru' remove any key accordingly to the LRU algorithm
+#   'volatile-random' removes a random key with an expire set
+#   'allkeys-random' removes a random key, any key
+#   'volatile-ttl' removes the key with the nearest expire time (minor TTL)
+#   'noeviction' forces no expiration at all, just return an error on write operations
+#   default: 'volatile-lru'
+#
+# [*password*]
+#   Password used by AUTH command. If false, not used.
+#   Default: false
+#
+# [*timeout*]
+#   Set the redis config value timeout (seconds).
+#   Default: 300
+#
+# [*slave_read_only*]
+#   Make slaves read-only
+#   Default: true
+#
+# [*slowlog_log_slower_than*]
 #   Set the redis config value slowlog-log-slower-than (microseconds).
 #   Default: 10000
 #
-# [*redis_showlog_max_len*]
+# [*showlog_max_len*]
 #   Set the redis config value slowlog-max-len.
 #   Default: 1024
 #
-# [*redis_password*]
-#   Password used by AUTH command. Will be setted is its not nil.
-#   Default: nil
+# [*autostart*]
+#   Configure the init script to start redis on system boot
+#   Default: true
 #
 # === Examples
 #
@@ -53,73 +75,59 @@
 #
 # === Authors
 #
+# Identified, Inc.
 # Thomas Van Doren
 #
 # === Copyright
-#
+
+# Copyright 2013 Identified, Inc.
 # Copyright 2012 Thomas Van Doren, unless otherwise noted.
 #
 define redis::instance (
-  $redis_port = $redis::params::redis_port,
-  $redis_bind_address = $redis::params::redis_bind_address,
-  $redis_max_memory = $redis::params::redis_max_memory,
-  $redis_max_clients = $redis::params::redis_max_clients,
-  $redis_timeout = $redis::params::redis_timeout,
-  $redis_loglevel = $redis::params::redis_loglevel,
-  $redis_databases = $redis::params::redis_databases,
-  $redis_slowlog_log_slower_than = $redis::params::redis_slowlog_log_slower_than,
-  $redis_slowlog_max_len = $redis::params::redis_slowlog_max_len,
-  $redis_password = $redis::params::redis_password
-  ) {
-
-  # Using Exec as a dependency here to avoid dependency cyclying when doing
-  # Class['redis'] -> Redis::Instance[$name]
-  Exec['install-redis'] -> Redis::Instance[$name]
-  include redis
+  $appendfsync             = 'everysec', # `always`, `everysec`, `no`
+  $appendonly              = false,
+  $bind_address            = false,
+  $log_level                = 'notice',
+  $max_clients             = false,
+  $maxmemory,
+  $maxmemory_policy        = 'volatile-lru', # `allkeys-lru`, `volatile-random`, `allkeys-random`, `volatile-ttl`, `noeviction`
+  $password                = false,
+  $port                    = 6379,
+  $slave_read_only         = true,
+  $slowlog_log_slower_than = 10000,
+  $slowlog_max_len         = 128,
+  $timeout                 = 300,
+  $autostart               = true
+) {
+  Class['redis'] -> Redis::Instance[$name]
 
   $version = $redis::version
 
-  case $version {
-    /^2\.4\.\d+$/: {
-      if ($redis_max_clients == false) {
-        $real_redis_max_clients = 0
-      }
-      else {
-        $real_redis_max_clients = $redis_max_clients
-      }
-    }
-    /^2\.6\.\d+$/: {
-      $real_redis_max_clients = $redis_max_clients
-    }
-    default: {
-      fail("Invalid redis version, ${version}. It must match 2.4.\\d+ or 2.6.\\d+.")
-    }
-  }
-
-  file { "redis-lib-port-${redis_port}":
+  file { "redis-lib-port-${port}":
     ensure => directory,
-    path   => "/var/lib/redis/${redis_port}",
+    path   => "/var/lib/redis/${port}",
   }
 
-  file { "redis-init-${redis_port}":
+  file { "redis-init-${port}":
     ensure  => present,
-    path    => "/etc/init.d/redis_${redis_port}",
+    path    => "/etc/init/redis_${port}.conf",
     mode    => '0755',
     content => template('redis/redis.init.erb'),
-    notify  => Service["redis-${redis_port}"],
+    notify  => Service["redis_${port}"],
   }
-  file { "redis_port_${redis_port}.conf":
+
+  file { "redis_port_${port}.conf":
     ensure  => present,
-    path    => "/etc/redis/${redis_port}.conf",
+    path    => "/etc/redis/redis_${port}.conf",
     mode    => '0644',
     content => template('redis/redis_port.conf.erb'),
   }
 
-  service { "redis-${redis_port}":
+  service { "redis_${port}":
     ensure    => running,
-    name      => "redis_${redis_port}",
+    name      => "redis_${port}",
     enable    => true,
-    require   => [ File["redis_port_${redis_port}.conf"], File["redis-init-${redis_port}"], File["redis-lib-port-${redis_port}"] ],
-    subscribe => File["redis_port_${redis_port}.conf"],
+    require   => [ File["redis_port_${port}.conf"], File["redis-init-${port}"], File["redis-lib-port-${port}"] ],
+    subscribe => File["redis_port_${port}.conf"],
   }
 }

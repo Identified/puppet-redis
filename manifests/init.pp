@@ -6,7 +6,7 @@
 #
 # [*version*]
 #   Version to install.
-#   Default: 2.4.13
+#   Default: 2.6.13
 #
 # [*redis_src_dir*]
 #   Location to unpack source code before building and installing it.
@@ -21,83 +21,77 @@
 # include redis
 #
 # class { 'redis':
-#   version       => '2.6',
+#   version       => '2.6.13',
 #   redis_src_dir => '/fake/path/redis-src',
 #   redis_bin_dir => '/fake/path/redis',
 # }
 #
 # === Authors
 #
+# Identified, Inc.
 # Thomas Van Doren
 #
 # === Copyright
 #
+# Copyright 2013 Identified, Inc.
 # Copyright 2012 Thomas Van Doren, unless otherwise noted.
 #
 class redis (
-  $version = $redis::params::version,
-  $redis_src_dir = $redis::params::redis_src_dir,
-  $redis_bin_dir = $redis::params::redis_bin_dir
+  $version       = $redis::params::version,
+  $src_dir = $redis::params::src_dir,
+  $bin_dir = $redis::params::bin_dir
 ) inherits redis::params {
 
-  include wget
-  include gcc
+  include redis::dependencies
 
-  $redis_pkg_name = "redis-${version}.tar.gz"
-  $redis_pkg = "${redis_src_dir}/${redis_pkg_name}"
-
-  # Install default instance
-  redis::instance { 'redis-default': }
+  $pkg_name = "redis-${version}.tar.gz"
+  $pkg = "${src_dir}/${pkg_name}"
 
   File {
     owner => root,
     group => root,
   }
-  file { $redis_src_dir:
+
+  file { $src_dir:
     ensure => directory,
   }
+
   file { '/etc/redis':
     ensure => directory,
   }
+
   file { 'redis-lib':
     ensure => directory,
     path   => '/var/lib/redis',
   }
 
-  # If the version is 2.4.13, use the tarball that ships with the
-  # module.
-  if ($version == '2.4.13') {
-    file { 'redis-pkg':
-      ensure => present,
-      path   => $redis_pkg,
-      mode   => '0644',
-      source => 'puppet:///modules/redis/redis-2.4.13.tar.gz',
-    }
-  }
   exec { 'get-redis-pkg':
-    command => "/usr/bin/wget --output-document ${redis_pkg} http://redis.googlecode.com/files/${redis_pkg_name}",
-    unless  => "/usr/bin/test -f ${redis_pkg}",
-    require => File[$redis_src_dir],
+    command => "/usr/bin/wget --output-document ${pkg} http://redis.googlecode.com/files/${pkg_name}",
+    unless  => "/usr/bin/test -f ${pkg}",
+    require => [Package['wget'], File[$src_dir]],
   }
 
-  file { 'redis-cli-link':
-    ensure => link,
-    path   => '/usr/local/bin/redis-cli',
-    target => "${redis_bin_dir}/bin/redis-cli",
-  }
   exec { 'unpack-redis':
-    command => "tar --strip-components 1 -xzf ${redis_pkg}",
-    cwd     => $redis_src_dir,
+    command => "tar --strip-components 1 -xzf ${pkg}",
+    cwd     => $src_dir,
     path    => '/bin:/usr/bin',
-    unless  => "test -f ${redis_src_dir}/Makefile",
+    unless  => "test -f ${src_dir}/Makefile",
     require => Exec['get-redis-pkg'],
   }
+
   exec { 'install-redis':
-    command => "make && make install PREFIX=${redis_bin_dir}",
-    cwd     => $redis_src_dir,
+    command => "make && make install PREFIX=${bin_dir}",
+    cwd     => $src_dir,
     path    => '/bin:/usr/bin',
-    unless  => "test $(${redis_bin_dir}/bin/redis-server --version | cut -d ' ' -f 1) = 'Redis'",
-    require => [ Exec['unpack-redis'], Class['gcc'] ],
+    unless  => "test $(${bin_dir}/bin/redis-server --version | cut -d ' ' -f 1) = 'Redis'",
+    require => [Package['build-essential'], Exec['unpack-redis']],
+  }
+
+  exec { 'redis update-alternative':
+    command => "sudo update-alternatives --install /usr/bin/redis-server redis-server ${bin_dir}/bin/redis-server 1 \
+                                         --slave   /usr/bin/redis-cli    redis-cli    ${bin_dir}/bin/redis-cli",
+    require => Exec['install-redis'],
+    cwd     => '/home',
   }
 
 }
