@@ -2,8 +2,6 @@
 #
 # Redis params.
 #
-# === Parameters
-#
 # === Authors
 #
 # Identified, Inc.

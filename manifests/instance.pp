@@ -39,7 +39,7 @@
 #   'volatile-random' removes a random key with an expire set
 #   'allkeys-random' removes a random key, any key
 #   'volatile-ttl' removes the key with the nearest expire time (minor TTL)
-#   'noeviction' forces no expiration at all, just return an error on write operations
+#   'noeviction' set no expiration at all, just return an error on writes
 #   default: 'volatile-lru'
 #
 # [*password*]
@@ -84,13 +84,13 @@
 # Copyright 2012 Thomas Van Doren, unless otherwise noted.
 #
 define redis::instance (
-  $appendfsync             = 'everysec', # `always`, `everysec`, `no`
+  $maxmemory,
+  $appendfsync             = 'everysec',
   $appendonly              = false,
   $bind_address            = false,
-  $log_level                = 'notice',
+  $log_level               = 'notice',
   $max_clients             = false,
-  $maxmemory,
-  $maxmemory_policy        = 'volatile-lru', # `allkeys-lru`, `volatile-random`, `allkeys-random`, `volatile-ttl`, `noeviction`
+  $maxmemory_policy        = 'volatile-lru',
   $password                = false,
   $port                    = 6379,
   $slave_read_only         = true,
@@ -103,7 +103,7 @@ define redis::instance (
 
   $version = $redis::version
 
-  file { "redis-lib-port-${port}":
+  file { "redis-lib-${port}":
     ensure => directory,
     path   => "/var/lib/redis/${port}",
   }
@@ -116,7 +116,7 @@ define redis::instance (
     notify  => Service["redis_${port}"],
   }
 
-  file { "redis_port_${port}.conf":
+  file { "redis_${port}.conf":
     ensure  => present,
     path    => "/etc/redis/redis_${port}.conf",
     mode    => '0644',
@@ -127,7 +127,7 @@ define redis::instance (
     ensure    => running,
     name      => "redis_${port}",
     enable    => true,
-    require   => [ File["redis_port_${port}.conf"], File["redis-init-${port}"], File["redis-lib-port-${port}"] ],
+    require   => [ File["redis_${port}.conf"], File["redis-init-${port}"], File["redis-lib-${port}"] ],
     subscribe => File["redis_port_${port}.conf"],
   }
 }
