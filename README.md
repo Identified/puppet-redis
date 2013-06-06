@@ -30,7 +30,7 @@ Creates an instance on port 6379, sets maxmemory to 1 gb, and sets a password fr
 
 ```puppet
 redis::instance { 'redis-6379':
-  port      => 6900,
+  port      => 6379,
   password  => hiera('redis_password'),
   maxmemory => '1gb',
 }
