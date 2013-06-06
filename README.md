@@ -4,7 +4,7 @@ A puppet module for installing and managing Redis.
 
 ## Installation
 
-Add this as a git submodule into your puppet modules/cdh4 directory:
+Add this as a git submodule into your puppet modules/redis directory:
 ```bash
 git submodule add git://github.com/Identified/puppet-redis.git modules/redis
 git commit -m 'Adding modules/redis as a git submodule.'
