@@ -1,4 +1,4 @@
-# redis-puppet
+# puppet-reds
 
 A puppet module for installing and managing Redis.
 
