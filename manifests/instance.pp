@@ -144,7 +144,7 @@ define redis::instance (
   service { "redis_${port}":
     ensure    => running,
     name      => "redis_${port}",
-    enable    => true,
+    enable    => $autostart,
     require   => [ File["redis_${port}.conf"], File["redis-init-${port}"], File["redis-lib-${port}"] ],
     subscribe => File["redis_${port}.conf"],
   }
