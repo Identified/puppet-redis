@@ -1,7 +1,7 @@
 description "Redis Server"
 
 <% if @autostart %>
-start on [filesystem and net-device-up IFACE=lo]
+start on runlevel [2345]
 <% end %>
 stop on runlevel [!2345]
 
