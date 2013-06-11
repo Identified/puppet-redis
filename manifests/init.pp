@@ -37,7 +37,7 @@
 # Copyright 2012 Thomas Van Doren, unless otherwise noted.
 #
 class redis (
-  $version       = $redis::params::version,
+  $version = $redis::params::version,
   $src_dir = $redis::params::src_dir,
   $bin_dir = $redis::params::bin_dir
 ) inherits redis::params {
