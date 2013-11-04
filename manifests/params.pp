@@ -12,7 +12,7 @@
 # Copyright 2012 Thomas Van Doren, unless otherwise noted.
 #
 class redis::params {
-  $version = '2.6.13'
+  $version = '2.6.16'
   $src_dir = '/opt/redis-src'
   $bin_dir = '/opt/redis'
 }
