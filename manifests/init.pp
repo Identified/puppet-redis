@@ -66,13 +66,13 @@ class redis (
   }
 
   exec { 'get-redis-pkg':
-    command => "/usr/bin/wget --output-document ${pkg} http://download.redis.io/releases/${pkg_name}",
+    command => "rm -rf ${src_dir} && mkdir ${src_dir} && /usr/bin/wget --output-document ${pkg} http://download.redis.io/releases/${pkg_name}",
     unless  => "/usr/bin/test -f ${pkg}",
     require => [Package['wget'], File[$src_dir]],
   }
 
   exec { 'unpack-redis':
-    command => "ls ${src_dir}/* | grep -v .tar.gz | xargs rm -rf && tar --strip-components 1 -xzf ${pkg}",
+    command => "tar --strip-components 1 -xzf ${pkg}",
     cwd     => $src_dir,
     path    => '/bin:/usr/bin',
     unless  => "test -f ${src_dir}/Makefile  && /usr/bin/test $(cat ${src_dir}/src/version.h | cut -d ' ' -f 3 | cut -d '\"' -f 2) = '${version}'",
