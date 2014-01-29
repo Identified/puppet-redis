@@ -90,8 +90,9 @@ class redis (
   exec { 'redis update-alternative':
     command => "sudo update-alternatives --install /usr/bin/redis-server redis-server ${bin_dir}/bin/redis-server 1 \
                                          --slave   /usr/bin/redis-cli    redis-cli    ${bin_dir}/bin/redis-cli",
-    require => Exec['install-redis'],
+    unless => "/bin/sh -c '[ -L /etc/alternatives/redis-server ] && [ /etc/alternatives/redis-server -ef ${bin_dir}/bin/redis-server ] && [ -L /etc/alternatives/redis-cli ] && [ /etc/alternatives/redis-cli -ef ${bin_dir}/bin/redis-cli ]'",
     cwd     => '/home',
+    require => Exec['install-redis'],
   }
 
 }
